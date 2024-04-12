@@ -16,5 +16,12 @@ public class Context {
 
     public <ComponentType, ComponentImplementation>
     void bind(Class<ComponentType> typeClass, Class<ComponentImplementation> implementation) {
+        try {
+            components.put(typeClass, implementation.newInstance());
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
