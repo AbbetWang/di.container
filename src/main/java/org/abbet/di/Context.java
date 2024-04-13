@@ -36,13 +36,15 @@ public class Context {
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
         Stream<Constructor<?>> injectConstructors = stream(implementation.getConstructors());
-        return (Constructor<Type>) injectConstructors.findFirst().orElseGet(() -> {
-            try {
-                return implementation.getConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return (Constructor<Type>) injectConstructors
+                .filter(c -> c.isAnnotationPresent(Inject.class))
+                .findFirst().orElseGet(() -> {
+                    try {
+                        return implementation.getConstructor();
+                    } catch (NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     public <ComponentType> ComponentType get(Class<ComponentType> type) {
