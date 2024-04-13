@@ -1,5 +1,6 @@
 package org.abbet.di;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -17,12 +18,18 @@ public class ContainerTest {
         }
     }
 
+    Context context;
+
+    @BeforeEach
+    public void beforeEach() {
+        context = new Context();
+    }
+
     @Nested
     public class ComponentConstruction {
         // TODO: instance
         @Test
         public void should_bind_type_to_a_specific_instance() {
-            Context context = new Context();
             Component instance = new Component() {
             };
             context.bind(Component.class, instance);
@@ -37,7 +44,6 @@ public class ContainerTest {
 
             @Test
             public void should_bind_type_to_a_class_with_default_constructor() {
-                Context context = new Context();
                 context.bind(Component.class, ComponentWithDefaultConstructor.class);
                 Component instance = context.get(Component.class);
                 assertNotNull(instance);
