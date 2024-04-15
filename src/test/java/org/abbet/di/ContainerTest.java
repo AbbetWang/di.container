@@ -71,6 +71,22 @@ public class ContainerTest {
 
             }
 
+            // TODO: multiple inject constructors throw exception
+            @Test
+            public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
+                assertThrows(IllegalInjectConstructorException.class,()->{
+                    context.bind(Component.class,ComponentWithMultipleInjectConstructor.class);
+                    context.bind(String.class, "dependency");
+                    Component component = context.get(Component.class);
+                });
+
+            }
+
+
+                // TODO: nor default constructor or inject constructor exception
+            // TODO: Dependency Not Found exception
+
+
         }
 
         @Nested
@@ -134,6 +150,19 @@ public class ContainerTest {
 
         public String getDependency() {
             return dependency;
+        }
+    }
+
+    static class ComponentWithMultipleInjectConstructor implements Component{
+
+        String dependency;
+
+        @Inject
+        public ComponentWithMultipleInjectConstructor() {
+        }
+        @Inject
+        public ComponentWithMultipleInjectConstructor(String dependency) {
+            this.dependency = dependency;
         }
     }
 }
