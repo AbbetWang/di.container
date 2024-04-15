@@ -77,7 +77,7 @@ public class ContainerTest {
                 assertThrows(IllegalInjectConstructorException.class, () -> {
                     context.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
                     context.bind(String.class, "dependency");
-                    Component component = context.get(Component.class);
+                    context.get(Component.class);
                 });
 
             }
