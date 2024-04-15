@@ -4,9 +4,11 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -21,6 +23,15 @@ public class Context {
 
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
+        List<Constructor<?>> constructors = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (constructors.size() > 1) {
+            throw new IllegalInjectConstructorException();
+        }
+        List<Constructor<?>> constructors1 = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (constructors1.size() == 0 && stream(implementation.getConstructors()).filter(it -> it.getParameters().length == 0).toArray(Constructor<?>[]::new).length == 0) {
+            throw new IllegalInjectConstructorException();
+        }
+
         providers.put(type, (Provider<Type>) () -> {
             try {
                 Constructor<?> injectConstructor = getInjectConstructor(implementation);
@@ -28,9 +39,10 @@ public class Context {
                         .map(p -> get(p.getType()))
                         .toArray(Object[]::new);
                 return (Type) injectConstructor.newInstance(dependencies);
-            } catch (Exception e) {
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
+
         });
     }
 
@@ -47,8 +59,12 @@ public class Context {
                 });
     }
 
-    public <ComponentType> ComponentType get(Class<ComponentType> type) {
-        return (ComponentType) providers.get(type).get();
+    public <Type> Type get(Class<Type> type) {
+        try {
+            return (Type) providers.get(type).get();
+        } catch (NullPointerException e) {
+            throw new DependenciesNotFoundException();
+        }
     }
 
 }
