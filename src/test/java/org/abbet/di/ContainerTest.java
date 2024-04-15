@@ -92,7 +92,15 @@ public class ContainerTest {
                 });
 
             }
+
             // TODO: Dependency Not Found exception
+            @Test
+            public void should_throw_exception_if_dependencies_not_found() {
+                assertThrows(DependenciesNotFoundException.class, () -> {
+                    context.bind(Component.class, ComponentWithInjectConstructor.class);
+                    context.get(Component.class);
+                });
+            }
 
 
         }
