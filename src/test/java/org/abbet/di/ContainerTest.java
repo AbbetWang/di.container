@@ -74,8 +74,8 @@ public class ContainerTest {
             // TODO: multiple inject constructors throw exception
             @Test
             public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
-                assertThrows(IllegalInjectConstructorException.class,()->{
-                    context.bind(Component.class,ComponentWithMultipleInjectConstructor.class);
+                assertThrows(IllegalInjectConstructorException.class, () -> {
+                    context.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
                     context.bind(String.class, "dependency");
                     Component component = context.get(Component.class);
                 });
@@ -83,7 +83,15 @@ public class ContainerTest {
             }
 
 
-                // TODO: nor default constructor or inject constructor exception
+            // TODO: nor default constructor or inject constructor exception
+            @Test
+            public void should_throw_exception_when_no_default_or_inject_constructor() {
+                assertThrows(IllegalInjectConstructorException.class, () -> {
+                    context.bind(Component.class, ComponentWithoutInjectOrDefaultConstructor.class);
+                    Component component = context.get(Component.class);
+                });
+
+            }
             // TODO: Dependency Not Found exception
 
 
@@ -153,16 +161,23 @@ public class ContainerTest {
         }
     }
 
-    static class ComponentWithMultipleInjectConstructor implements Component{
+    static class ComponentWithMultipleInjectConstructor implements Component {
 
         String dependency;
 
         @Inject
         public ComponentWithMultipleInjectConstructor() {
         }
+
         @Inject
         public ComponentWithMultipleInjectConstructor(String dependency) {
             this.dependency = dependency;
+        }
+    }
+
+    static class ComponentWithoutInjectOrDefaultConstructor implements Component {
+
+        public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
         }
     }
 }

@@ -23,9 +23,14 @@ public class Context {
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
         List<Constructor<?>> constructors = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if(constructors.size()>1){
+        if (constructors.size() > 1) {
             throw new IllegalInjectConstructorException();
         }
+        List<Constructor<?>> constructors1 = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (constructors1.size() == 0 && stream(implementation.getConstructors()).filter(it -> it.getParameters().length == 0).toArray(Constructor<?>[]::new).length == 0) {
+            throw new IllegalInjectConstructorException();
+        }
+
         providers.put(type, (Provider<Type>) () -> {
             try {
                 Constructor<?> injectConstructor = getInjectConstructor(implementation);
