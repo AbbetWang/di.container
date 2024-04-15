@@ -52,11 +52,10 @@ public class Context {
     }
 
     public <Type> Type get(Class<Type> type) {
-        try {
-            return (Type) providers.get(type).get();
-        } catch (NullPointerException e) {
+        if (!providers.containsKey(type)) {
             throw new DependencyNotFoundException();
         }
+        return (Type) providers.get(type).get();
     }
 
 }
