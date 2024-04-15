@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -47,8 +46,8 @@ public class Context {
                 });
     }
 
-    public <ComponentType> ComponentType get(Class<ComponentType> type) {
-        return (ComponentType) providers.get(type).get();
+    public <Type> Type get(Class<Type> type) {
+        return (Type) providers.get(type).get();
     }
 
 }
