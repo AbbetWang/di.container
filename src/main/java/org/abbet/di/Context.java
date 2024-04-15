@@ -23,18 +23,10 @@ public class Context {
 
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
-        List<Constructor<?>> constructors = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if (constructors.size() > 1) {
-            throw new IllegalInjectConstructorException();
-        }
-        List<Constructor<?>> constructors1 = stream(implementation.getConstructors()).filter(it -> it.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if (constructors1.size() == 0 && stream(implementation.getConstructors()).filter(it -> it.getParameters().length == 0).toArray(Constructor<?>[]::new).length == 0) {
-            throw new IllegalInjectConstructorException();
-        }
-
+        Constructor<?> injectConstructor = getInjectConstructor(implementation);
+        
         providers.put(type, (Provider<Type>) () -> {
             try {
-                Constructor<?> injectConstructor = getInjectConstructor(implementation);
                 Object[] dependencies = stream(injectConstructor.getParameters())
                         .map(p -> get(p.getType()))
                         .toArray(Object[]::new);
@@ -47,14 +39,15 @@ public class Context {
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        Stream<Constructor<?>> injectConstructors = stream(implementation.getConstructors());
-        return (Constructor<Type>) injectConstructors
-                .filter(c -> c.isAnnotationPresent(Inject.class))
+        List<Constructor<?>> injectConstructors = stream(implementation.getConstructors())
+                .filter(c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (injectConstructors.size() > 1) throw new IllegalComponentException();
+        return (Constructor<Type>) injectConstructors.stream()
                 .findFirst().orElseGet(() -> {
                     try {
                         return implementation.getConstructor();
-                    } catch (NoSuchMethodException e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception e) {
+                        throw new IllegalComponentException();
                     }
                 });
     }

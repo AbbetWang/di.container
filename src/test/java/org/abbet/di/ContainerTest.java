@@ -74,7 +74,7 @@ public class ContainerTest {
             // TODO: multiple inject constructors throw exception
             @Test
             public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
-                assertThrows(IllegalInjectConstructorException.class, () -> {
+                assertThrows(IllegalComponentException.class, () -> {
                     context.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
                     context.bind(String.class, "dependency");
                     context.get(Component.class);
@@ -86,9 +86,8 @@ public class ContainerTest {
             // TODO: nor default constructor or inject constructor exception
             @Test
             public void should_throw_exception_when_no_default_or_inject_constructor() {
-                assertThrows(IllegalInjectConstructorException.class, () -> {
+                assertThrows(IllegalComponentException.class, () -> {
                     context.bind(Component.class, ComponentWithoutInjectOrDefaultConstructor.class);
-                    Component component = context.get(Component.class);
                 });
 
             }
