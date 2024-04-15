@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -31,6 +33,14 @@ public class ContainerTest {
 
         // TODO: abstract class
         // TODO: interface
+        // TODO: component does not exist
+        @Test
+        public void should_return_empty_if_component_not_defined() {
+            Optional<Component> component = context.get_(Component.class);
+            assertTrue(component.isEmpty());
+
+        }
+
         @Nested
         public class ConstructorInjection {
 
@@ -71,7 +81,6 @@ public class ContainerTest {
 
             }
 
-            // TODO: multiple inject constructors throw exception
             @Test
             public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
                 assertThrows(IllegalComponentException.class, () -> {
@@ -83,7 +92,6 @@ public class ContainerTest {
             }
 
 
-            // TODO: nor default constructor or inject constructor exception
             @Test
             public void should_throw_exception_when_no_default_or_inject_constructor() {
                 assertThrows(IllegalComponentException.class, () -> {
@@ -92,7 +100,6 @@ public class ContainerTest {
 
             }
 
-            // TODO: Dependency Not Found exception
             @Test
             public void should_throw_exception_if_dependencies_not_found() {
                 context.bind(Component.class, ComponentWithInjectConstructor.class);
