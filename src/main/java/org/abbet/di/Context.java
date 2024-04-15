@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 
@@ -24,7 +23,7 @@ public class Context {
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
         Constructor<?> injectConstructor = getInjectConstructor(implementation);
-        
+
         providers.put(type, (Provider<Type>) () -> {
             try {
                 Object[] dependencies = stream(injectConstructor.getParameters())
@@ -56,7 +55,7 @@ public class Context {
         try {
             return (Type) providers.get(type).get();
         } catch (NullPointerException e) {
-            throw new DependenciesNotFoundException();
+            throw new DependencyNotFoundException();
         }
     }
 
