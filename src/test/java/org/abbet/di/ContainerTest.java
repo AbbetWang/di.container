@@ -86,7 +86,7 @@ public class ContainerTest {
                 assertThrows(IllegalComponentException.class, () -> {
                     context.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
                     context.bind(String.class, "dependency");
-                    context.get(Component.class).orElseThrow(() -> new DependencyNotFoundException());
+                    context.get(Component.class).get();
                 });
 
             }
@@ -104,7 +104,7 @@ public class ContainerTest {
             public void should_throw_exception_if_dependencies_not_found() {
                 context.bind(Component.class, ComponentWithInjectConstructor.class);
                 assertThrows(DependencyNotFoundException.class, () -> {
-                    context.get(Component.class).orElseThrow(() -> new DependencyNotFoundException());
+                    context.get(Component.class).get();
                 });
             }
 
