@@ -119,6 +119,11 @@ public class ContainerTest {
 
             }
 
+            @Test // A ->B -> C -> A
+            public void should_throw_exception_if_transitive_cyclic_dependencies_found() {
+
+            }
+
 
         }
 
@@ -147,80 +152,89 @@ public class ContainerTest {
 
     }
 
-    interface Component {
+}
 
+interface Component {
+
+}
+
+interface Dependency {
+
+}
+
+interface AnotherDependency {
+
+}
+
+class ComponentWithDefaultConstructor implements Component {
+    public ComponentWithDefaultConstructor() {
+    }
+}
+
+class ComponentWithInjectConstructor implements Component {
+    private Dependency dependency;
+
+    @Inject
+    public ComponentWithInjectConstructor(Dependency dependency) {
+        this.dependency = dependency;
     }
 
-    interface Dependency {
+    public Dependency getDependency() {
+        return dependency;
+    }
+}
 
+class DependencyWithInjectConstructor implements Dependency {
+    String dependency;
+
+    @Inject
+    public DependencyWithInjectConstructor(String dependency) {
+        this.dependency = dependency;
     }
 
-    static class ComponentWithDefaultConstructor implements Component {
-        public ComponentWithDefaultConstructor() {
-        }
+    public String getDependency() {
+        return dependency;
+    }
+}
+
+class ComponentWithMultipleInjectConstructor implements Component {
+
+    String dependency;
+
+    @Inject
+    public ComponentWithMultipleInjectConstructor() {
     }
 
-    static class ComponentWithInjectConstructor implements Component {
-        private Dependency dependency;
-
-        @Inject
-        public ComponentWithInjectConstructor(Dependency dependency) {
-            this.dependency = dependency;
-        }
-
-        public Dependency getDependency() {
-            return dependency;
-        }
+    @Inject
+    public ComponentWithMultipleInjectConstructor(String dependency) {
+        this.dependency = dependency;
     }
+}
 
-    static class DependencyWithInjectConstructor implements Dependency {
-        String dependency;
+class ComponentWithoutInjectOrDefaultConstructor implements Component {
 
-        @Inject
-        public DependencyWithInjectConstructor(String dependency) {
-            this.dependency = dependency;
-        }
-
-        public String getDependency() {
-            return dependency;
-        }
+    public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
     }
+}
 
-    static class ComponentWithMultipleInjectConstructor implements Component {
+class DependencyCyclicComponentConstructor implements Dependency {
+    private Component component;
 
-        String dependency;
-
-        @Inject
-        public ComponentWithMultipleInjectConstructor() {
-        }
-
-        @Inject
-        public ComponentWithMultipleInjectConstructor(String dependency) {
-            this.dependency = dependency;
-        }
+    @Inject
+    public DependencyCyclicComponentConstructor(Component component) {
+        this.component = component;
     }
+}
 
-    static class ComponentWithoutInjectOrDefaultConstructor implements Component {
+class ComponentCyclicDependencyConstructor implements Component {
+    private Dependency dependency;
 
-        public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
-        }
+    @Inject
+    public ComponentCyclicDependencyConstructor(Dependency dependency) {
+        this.dependency = dependency;
     }
+}
 
-    static class DependencyCyclicComponentConstructor implements Dependency {
-        private Component component;
+class AnotherDependencyDependComponent implements AnotherDependency {
 
-        @Inject
-        public DependencyCyclicComponentConstructor(Component component) {
-            this.component = component;
-        }
-    }
-
-    static class ComponentCyclicDependencyConstructor implements Component {
-        private Dependency dependency;
-
-        @Inject
-        public ComponentCyclicDependencyConstructor(Dependency dependency) {
-            this.dependency = dependency;
-        }
-    }
 }
