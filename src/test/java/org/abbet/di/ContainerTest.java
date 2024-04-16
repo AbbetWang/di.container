@@ -2,6 +2,7 @@ package org.abbet.di;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -108,6 +109,16 @@ public class ContainerTest {
                 });
             }
 
+            @Test
+            public void should_throw_exception_if_cyclic_dependencies_found() {
+                context.bind(Component.class, ComponentCyclicDependencyConstructor.class);
+                context.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
+                assertThrows(CyclicDependencyFound.class, () -> {
+                    context.get(Component.class);
+                });
+
+            }
+
 
         }
 
@@ -192,6 +203,24 @@ public class ContainerTest {
     static class ComponentWithoutInjectOrDefaultConstructor implements Component {
 
         public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
+        }
+    }
+
+    static class DependencyCyclicComponentConstructor implements Dependency {
+        private Component component;
+
+        @Inject
+        public DependencyCyclicComponentConstructor(Component component) {
+            this.component = component;
+        }
+    }
+
+    static class ComponentCyclicDependencyConstructor implements Component {
+        private Dependency dependency;
+
+        @Inject
+        public ComponentCyclicDependencyConstructor(Dependency dependency) {
+            this.dependency = dependency;
         }
     }
 }
