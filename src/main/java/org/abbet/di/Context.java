@@ -28,7 +28,7 @@ public class Context {
         providers.put(type, (Provider<Type>) () -> {
             try {
                 Object[] dependencies = stream(injectConstructor.getParameters())
-                        .map(p -> get(p.getType()))
+                        .map(p -> get(p.getType()).orElseThrow(() -> new DependencyNotFoundException()))
                         .toArray(Object[]::new);
                 return (Type) injectConstructor.newInstance(dependencies);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -52,14 +52,7 @@ public class Context {
                 });
     }
 
-    public <Type> Type get(Class<Type> type) {
-        if (!providers.containsKey(type)) {
-            throw new DependencyNotFoundException();
-        }
-        return (Type) providers.get(type).get();
-    }
-
-    public <Type> Optional<Type> get_(Class<Type> type) {
+    public <Type> Optional<Type> get(Class<Type> type) {
         return Optional.ofNullable(providers.get(type)).map(provider -> (Type) provider.get());
     }
 }
