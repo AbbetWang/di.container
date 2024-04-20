@@ -1,7 +1,6 @@
 package org.abbet.di;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +25,7 @@ public class ContextConfig {
     void bind(Class<Type> type, Class<Implementation> implementation) {
         Constructor<?> injectConstructor = getInjectConstructor(implementation);
 
-        providers.put(type, new ConstructorInjectionProvider<>(type, injectConstructor));
+        providers.put(type, new ConstructorInjectionProvider<>(injectConstructor));
         dependencies.put(type, stream(injectConstructor.getParameters())
                 .map(Parameter::getType)
                 .collect(Collectors.toList()));
@@ -67,11 +66,9 @@ public class ContextConfig {
     }
 
     public class ConstructorInjectionProvider<T> implements ComponentProvider<T> {
-        private Class<?> componentType;
         private Constructor<T> injectConstructor;
 
-        public ConstructorInjectionProvider(Class<?> componentType, Constructor<T> injectConstructor) {
-            this.componentType = componentType;
+        public ConstructorInjectionProvider(Constructor<T> injectConstructor) {
             this.injectConstructor = injectConstructor;
         }
 
@@ -81,7 +78,7 @@ public class ContextConfig {
                 Object[] dependencies = stream(injectConstructor.getParameters())
                         .map(p -> {
                             Class<?> type = p.getType();
-                            return context.get(type).orElseThrow(() -> new DependencyNotFoundException(componentType, p.getType()));
+                            return context.get(type).get();
                         })
                         .toArray(Object[]::new);
                 return injectConstructor.newInstance(dependencies);
