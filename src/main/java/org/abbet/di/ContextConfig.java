@@ -14,7 +14,6 @@ import static java.util.Arrays.stream;
 public class ContextConfig {
 
     private Map<Class<?>, ComponentProvider<?>> providers = new HashMap<>();
-    private Map<Class<?>, List<Class<?>>> dependencies = new HashMap<>();
 
     public <Type> void bind(Class<Type> type, Type instance) {
         providers.put(type, new ComponentProvider<Type>() {
@@ -28,22 +27,17 @@ public class ContextConfig {
                 return List.of();
             }
         });
-        dependencies.put(type, asList());
     }
 
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
         Constructor<?> injectConstructor = getInjectConstructor(implementation);
-
         providers.put(type, new ConstructorInjectionProvider<>(injectConstructor));
-        dependencies.put(type, stream(injectConstructor.getParameters())
-                .map(Parameter::getType)
-                .collect(Collectors.toList()));
     }
 
 
     public Context getContext() {
-        dependencies.keySet().forEach(component -> checkDependency(component, new Stack<>()));
+        providers.keySet().forEach(component -> checkDependency(component, new Stack<>()));
 
         return new Context() {
             @Override
@@ -55,19 +49,15 @@ public class ContextConfig {
 
 
     private void checkDependency(Class<?> component, Stack<Class<?>> visits) {
-        for (Class<?> dependency : dependencies.get(component)) {
-            checkMissingDependency(component, dependency);
+        for (Class<?> dependency : providers.get(component).getDependencies()) {
+            if (!providers.containsKey(dependency)) {
+                throw new DependencyNotFoundException(component, dependency);
+            }
             if (visits.contains(dependency)) throw new CyclicDependencyFoundException(visits);
             visits.push(dependency);
             checkDependency(dependency, visits);
             visits.pop();
 
-        }
-    }
-
-    private void checkMissingDependency(Class<?> component, Class<?> dependency) {
-        if (!dependencies.containsKey(dependency)) {
-            throw new DependencyNotFoundException(component, dependency);
         }
     }
 
@@ -101,7 +91,9 @@ public class ContextConfig {
 
         @Override
         public List<Class<?>> getDependencies() {
-            return null;
+            return stream(injectConstructor.getParameters())
+                    .map(Parameter::getType)
+                    .collect(Collectors.toList());
         }
     }
 
