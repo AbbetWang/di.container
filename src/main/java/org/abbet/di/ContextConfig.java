@@ -63,6 +63,8 @@ public class ContextConfig {
 
     interface ComponentProvider<T> {
         T get(Context context);
+
+        List<Class<?>> getDependencies();
     }
 
     public class ConstructorInjectionProvider<T> implements ComponentProvider<T> {
@@ -85,6 +87,11 @@ public class ContextConfig {
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        @Override
+        public List<Class<?>> getDependencies() {
+            return null;
         }
     }
 
