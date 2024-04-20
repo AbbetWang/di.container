@@ -117,7 +117,7 @@ public class ContainerTest {
 
             }
 
-            @Test // A ->B -> C -> A
+            @Test
             public void should_throw_exception_if_transitive_cyclic_dependencies_found() {
                 context.bind(Component.class, ComponentCyclicDependencyConstructor.class);
                 context.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
