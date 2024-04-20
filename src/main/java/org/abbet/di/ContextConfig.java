@@ -6,10 +6,7 @@ import jakarta.inject.Provider;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -43,12 +40,40 @@ public class ContextConfig {
                 if (!dependencies.containsKey(dependency)) throw new DependencyNotFoundException(component, dependency);
             }
         }
+        // check cyclicDependency
+        for (Class<?> component : dependencies.keySet()) {
+            for (Class<?> dependency : dependencies.get(component))
+                try {
+                    checkCyclicDependency(component, dependency);
+                } catch (CyclicDependencyFoundException e) {
+                    throw new CyclicDependencyFoundException(dependency, e);
+                }
+        }
+
         return new Context() {
             @Override
             public <Type> Optional<Type> get(Class<Type> type) {
                 return Optional.ofNullable(providers.get(type)).map(provider -> (Type) provider.get(this));
             }
         };
+    }
+
+    private void checkCyclicDependency(Class<?> component, Class<?> dependency) {
+        // A -> B, B -> A
+        if (dependencies.get(component).size() == 0) {
+            return;
+        }
+        if (dependencies.get(dependency).stream()
+                .filter(d -> d.equals(component))
+                .findFirst()
+                .map(it -> true).orElse(false)) {
+            throw new CyclicDependencyFoundException(component, dependency);
+        }
+        dependencies.get(dependency).stream().forEach(it -> checkCyclicDependency(component, it));
+    }
+
+    private void checkDependency(Class<?> component, Stack<Class<?>> visits) {
+
     }
 
     interface ComponentProvider<T> {

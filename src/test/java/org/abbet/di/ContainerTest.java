@@ -128,7 +128,7 @@ public class ContainerTest {
                 config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
                 config.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
                 CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.getContext().get(Component.class);
+                    config.getContext();
                 });
 
                 Set<Class<?>> classes = Sets.newSet(exception.getComponents());
@@ -144,7 +144,7 @@ public class ContainerTest {
                 config.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
                 config.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
                 CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.getContext().get(Component.class);
+                    config.getContext();
                 });
                 Set<Class<?>> classes = Sets.newSet(exception.getComponents());
                 assertEquals(3, classes.size());
