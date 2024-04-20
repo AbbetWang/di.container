@@ -36,18 +36,7 @@ public class ContextConfig {
     public Context getContext() {
         // check dependency
         for (Class<?> component : dependencies.keySet()) {
-            for (Class<?> dependency : dependencies.get(component)) {
-                if (!dependencies.containsKey(dependency)) throw new DependencyNotFoundException(component, dependency);
-            }
-        }
-        // check cyclicDependency
-        for (Class<?> component : dependencies.keySet()) {
-            for (Class<?> dependency : dependencies.get(component))
-                try {
-                    checkCyclicDependency(component, dependency);
-                } catch (CyclicDependencyFoundException e) {
-                    throw new CyclicDependencyFoundException(dependency, e);
-                }
+            checkDependency(component, new Stack<>());
         }
 
         return new Context() {
@@ -58,22 +47,22 @@ public class ContextConfig {
         };
     }
 
-    private void checkCyclicDependency(Class<?> component, Class<?> dependency) {
-        // A -> B, B -> A
-        if (dependencies.get(component).size() == 0) {
-            return;
-        }
-        if (dependencies.get(dependency).stream()
-                .filter(d -> d.equals(component))
-                .findFirst()
-                .map(it -> true).orElse(false)) {
-            throw new CyclicDependencyFoundException(component, dependency);
-        }
-        dependencies.get(dependency).stream().forEach(it -> checkCyclicDependency(component, it));
-    }
 
     private void checkDependency(Class<?> component, Stack<Class<?>> visits) {
+        for (Class<?> dependency : dependencies.get(component)) {
+            checkMissingDependency(component, dependency);
+            if (visits.contains(dependency)) throw new CyclicDependencyFoundException(visits);
+            visits.push(dependency);
+            checkDependency(dependency, visits);
+            visits.pop();
 
+        }
+    }
+
+    private void checkMissingDependency(Class<?> component, Class<?> dependency) {
+        if (!dependencies.containsKey(dependency)) {
+            throw new DependencyNotFoundException(component, dependency);
+        }
     }
 
     interface ComponentProvider<T> {
@@ -84,8 +73,6 @@ public class ContextConfig {
         private Class<?> componentType;
         private Constructor<T> injectConstructor;
 
-        private boolean constructing = false;
-
         public ConstructorInjectionProvider(Class<?> componentType, Constructor<T> injectConstructor) {
             this.componentType = componentType;
             this.injectConstructor = injectConstructor;
@@ -93,9 +80,7 @@ public class ContextConfig {
 
         @Override
         public T get(Context context) {
-            if (constructing) throw new CyclicDependencyFoundException(componentType);
             try {
-                constructing = true;
                 Object[] dependencies = stream(injectConstructor.getParameters())
                         .map(p -> {
                             Class<?> type = p.getType();
@@ -103,13 +88,8 @@ public class ContextConfig {
                         })
                         .toArray(Object[]::new);
                 return injectConstructor.newInstance(dependencies);
-            } catch (CyclicDependencyFoundException e) {
-                throw new CyclicDependencyFoundException(componentType, e);
-
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
-            } finally {
-                constructing = false;
             }
         }
     }

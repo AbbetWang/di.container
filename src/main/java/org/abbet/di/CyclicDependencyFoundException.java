@@ -1,9 +1,6 @@
 package org.abbet.di;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CyclicDependencyFoundException extends RuntimeException {
@@ -14,9 +11,8 @@ public class CyclicDependencyFoundException extends RuntimeException {
     }
 
 
-    public CyclicDependencyFoundException(Class<?> componentType, CyclicDependencyFoundException e) {
-        components.add(componentType);
-        components.addAll(e.components);
+    public CyclicDependencyFoundException(List<Class<?>> visits) {
+        components.addAll(visits);
     }
 
     public Class<?>[] getComponents() {
