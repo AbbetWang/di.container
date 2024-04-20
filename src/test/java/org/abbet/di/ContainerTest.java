@@ -146,7 +146,11 @@ public class ContainerTest {
                 CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
                     context.get(Component.class);
                 });
-
+                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
+                assertEquals(3, classes.size());
+                assertTrue(classes.contains(Component.class));
+                assertTrue(classes.contains(Dependency.class));
+                assertTrue(classes.contains(AnotherDependency.class));
             }
 
 
