@@ -8,7 +8,6 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 
 public class ContextConfig {
@@ -31,8 +30,7 @@ public class ContextConfig {
 
     public <Type, Implementation extends Type>
     void bind(Class<Type> type, Class<Implementation> implementation) {
-        Constructor<?> injectConstructor = getInjectConstructor(implementation);
-        providers.put(type, new ConstructorInjectionProvider<>(injectConstructor));
+        providers.put(type, new ConstructorInjectionProvider<>(implementation));
     }
 
 
@@ -70,8 +68,22 @@ public class ContextConfig {
     public class ConstructorInjectionProvider<T> implements ComponentProvider<T> {
         private Constructor<T> injectConstructor;
 
-        public ConstructorInjectionProvider(Constructor<T> injectConstructor) {
-            this.injectConstructor = injectConstructor;
+        public ConstructorInjectionProvider(Class<T> component) {
+            this.injectConstructor = getInjectConstructor(component);
+        }
+
+        private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
+            List<Constructor<?>> injectConstructors = stream(implementation.getConstructors())
+                    .filter(c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+            if (injectConstructors.size() > 1) throw new IllegalComponentException();
+            return (Constructor<Type>) injectConstructors.stream()
+                    .findFirst().orElseGet(() -> {
+                        try {
+                            return implementation.getConstructor();
+                        } catch (Exception e) {
+                            throw new IllegalComponentException();
+                        }
+                    });
         }
 
         @Override
@@ -97,17 +109,4 @@ public class ContextConfig {
         }
     }
 
-    private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        List<Constructor<?>> injectConstructors = stream(implementation.getConstructors())
-                .filter(c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if (injectConstructors.size() > 1) throw new IllegalComponentException();
-        return (Constructor<Type>) injectConstructors.stream()
-                .findFirst().orElseGet(() -> {
-                    try {
-                        return implementation.getConstructor();
-                    } catch (Exception e) {
-                        throw new IllegalComponentException();
-                    }
-                });
-    }
 }
