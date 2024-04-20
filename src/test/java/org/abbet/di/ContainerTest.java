@@ -30,7 +30,7 @@ public class ContainerTest {
             Component instance = new Component() {
             };
             config.bind(Component.class, instance);
-            assertSame(instance, config.get(Component.class).get());
+            assertSame(instance, config.getContext().get(Component.class).get());
         }
 
         // TODO: abstract class
@@ -39,7 +39,7 @@ public class ContainerTest {
 
         @Test
         public void should_return_empty_if_component_not_defined() {
-            Optional<Component> component = config.get(Component.class);
+            Optional<Component> component = config.getContext().get(Component.class);
             assertTrue(component.isEmpty());
 
         }
@@ -51,7 +51,7 @@ public class ContainerTest {
             @Test
             public void should_bind_type_to_a_class_with_default_constructor() {
                 config.bind(Component.class, ComponentWithDefaultConstructor.class);
-                Component instance = config.get(Component.class).get();
+                Component instance = config.getContext().get(Component.class).get();
                 assertNotNull(instance);
                 assertTrue(instance instanceof ComponentWithDefaultConstructor);
 
@@ -63,7 +63,7 @@ public class ContainerTest {
                 };
                 config.bind(Component.class, ComponentWithInjectConstructor.class);
                 config.bind(Dependency.class, dependency);
-                Component instance = config.get(Component.class).get();
+                Component instance = config.getContext().get(Component.class).get();
                 assertNotNull(instance);
                 assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
             }
@@ -74,7 +74,7 @@ public class ContainerTest {
                 config.bind(Component.class, ComponentWithInjectConstructor.class);
                 config.bind(Dependency.class, DependencyWithInjectConstructor.class);
                 config.bind(String.class, "indirect dependency");
-                Component instance = config.get(Component.class).get();
+                Component instance = config.getContext().get(Component.class).get();
                 assertNotNull(instance);
                 Dependency dependency = ((ComponentWithInjectConstructor) instance).getDependency();
                 assertNotNull(dependency);
@@ -87,7 +87,7 @@ public class ContainerTest {
                 assertThrows(IllegalComponentException.class, () -> {
                     config.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
                     config.bind(String.class, "dependency");
-                    config.get(Component.class).get();
+                    config.getContext().get(Component.class).get();
                 });
 
             }
@@ -105,7 +105,7 @@ public class ContainerTest {
             public void should_throw_exception_if_dependencies_not_found() {
                 config.bind(Component.class, ComponentWithInjectConstructor.class);
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
-                    config.get(Component.class).get();
+                    config.getContext().get(Component.class).get();
                 });
                 assertEquals(Dependency.class, exception.getDependency());
                 assertEquals(Component.class, exception.getComponent());
@@ -117,7 +117,7 @@ public class ContainerTest {
                 config.bind(Component.class, ComponentWithInjectConstructor.class);
                 config.bind(Dependency.class, DependencyWithInjectConstructor.class);
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
-                    config.get(Component.class).get();
+                    config.getContext().get(Component.class).get();
                 });
                 assertEquals(String.class, exception.getDependency());
                 assertEquals(Dependency.class, exception.getComponent());
@@ -128,7 +128,7 @@ public class ContainerTest {
                 config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
                 config.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
                 CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.get(Component.class);
+                    config.getContext().get(Component.class);
                 });
 
                 Set<Class<?>> classes = Sets.newSet(exception.getComponents());
@@ -144,7 +144,7 @@ public class ContainerTest {
                 config.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
                 config.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
                 CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.get(Component.class);
+                    config.getContext().get(Component.class);
                 });
                 Set<Class<?>> classes = Sets.newSet(exception.getComponents());
                 assertEquals(3, classes.size());
