@@ -25,7 +25,7 @@ public class ContextConfig {
 
             @Override
             public List<Class<?>> getDependencies() {
-                return asList();
+                return List.of();
             }
         });
         dependencies.put(type, asList());
