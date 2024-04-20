@@ -2,11 +2,13 @@ package org.abbet.di;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.util.collections.Sets;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,9 +127,14 @@ public class ContainerTest {
             public void should_throw_exception_if_cyclic_dependencies_found() {
                 context.bind(Component.class, ComponentCyclicDependencyConstructor.class);
                 context.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
-                assertThrows(CyclicDependencyFound.class, () -> {
+                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
                     context.get(Component.class);
                 });
+
+                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
+                assertEquals(2, classes.size());
+                assertTrue(classes.contains(Component.class));
+                assertTrue(classes.contains(Dependency.class));
 
             }
 
@@ -136,9 +143,10 @@ public class ContainerTest {
                 context.bind(Component.class, ComponentCyclicDependencyConstructor.class);
                 context.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
                 context.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
-                assertThrows(CyclicDependencyFound.class, () -> {
+                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
                     context.get(Component.class);
                 });
+
             }
 
 
