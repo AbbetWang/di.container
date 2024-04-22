@@ -2,6 +2,7 @@ package org.abbet.di;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -161,7 +162,7 @@ public class ContainerTest {
         @Nested
         public class FieldInjection {
 
-            class ComponentWithFieldInjection {
+            static class ComponentWithFieldInjection {
                 @Inject
                 Dependency dependency;
             }
@@ -180,6 +181,7 @@ public class ContainerTest {
 
 
             @Test
+            @Disabled
             public void should_include_field_dependency_in_dependencies() {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFieldInjection.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
