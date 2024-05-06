@@ -181,13 +181,11 @@ public class ContainerTest {
 
 
             @Test
-            @Disabled
             public void should_include_field_dependency_in_dependencies() {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFieldInjection.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
-
             }
-
+            // TODO throw exception if field is final
         }
 
         @Nested
