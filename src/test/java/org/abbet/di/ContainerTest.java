@@ -212,12 +212,39 @@ public class ContainerTest {
                 }
             }
 
-            // TODO inject method with no dependencies will be called
             @Test
             public void should_call_inject_method_even_if_no_dependency_declare() {
                 config.bind(InjectMethodWithNoDependency.class, InjectMethodWithNoDependency.class);
                 InjectMethodWithNoDependency component = config.getContext().get(InjectMethodWithNoDependency.class).get();
                 assertTrue(component.called);
+            }
+
+            static class InjectMethodWithDependency {
+                Dependency dependency;
+
+                @Inject
+                void install(Dependency dependency) {
+                    this.dependency = dependency;
+                }
+
+            }
+
+            // TODO: inject method with dependencies will be injected
+            @Test
+            public void should_inject_dependency_via_inject_method() {
+                config.bind(InjectMethodWithDependency.class, InjectMethodWithDependency.class);
+                Dependency dependency = new Dependency() {
+                };
+                config.bind(Dependency.class, dependency);
+                InjectMethodWithDependency component = config.getContext().get(InjectMethodWithDependency.class).get();
+
+                assertSame(dependency, component.dependency);
+            }
+
+            @Test
+            public void should_include_dependencies_from_inject_method() {
+                ConstructorInjectionProvider<InjectMethodWithDependency> provider = new ConstructorInjectionProvider<>(InjectMethodWithDependency.class);
+                assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
 
 

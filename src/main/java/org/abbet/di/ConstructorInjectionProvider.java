@@ -4,7 +4,9 @@ import jakarta.inject.Inject;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,10 +49,13 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
 
     @Override
     public List<Class<?>> getDependencies() {
-        return Stream.concat(
+        Set<Class<?>> dependenciesViaMethod = new HashSet<>();
+        injectMethods.stream().map(Method::getParameterTypes)
+                .forEach(types -> dependenciesViaMethod.addAll(List.of(types)));
+        return Stream.concat(dependenciesViaMethod.stream(), Stream.concat(
                 stream(injectConstructor.getParameters())
                         .map(Parameter::getType)
-                , injectFields.stream().map(v -> v.getType())).collect(Collectors.toList());
+                , injectFields.stream().map(v -> v.getType()))).collect(Collectors.toList());
     }
 
     private static <T> List<Method> getInjectMethods(Class<T> component) {
