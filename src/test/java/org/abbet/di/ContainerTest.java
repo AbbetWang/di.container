@@ -203,6 +203,23 @@ public class ContainerTest {
 
         @Nested
         public class MethodInjection {
+            static class InjectMethodWithNoDependency {
+                boolean called = false;
+
+                @Inject
+                void install() {
+                    this.called = true;
+                }
+            }
+
+            // TODO inject method with no dependencies will be called
+            @Test
+            public void should_call_inject_method_even_if_no_dependency_declare() {
+                config.bind(InjectMethodWithNoDependency.class, InjectMethodWithNoDependency.class);
+                InjectMethodWithNoDependency component = config.getContext().get(InjectMethodWithNoDependency.class).get();
+                assertTrue(component.called);
+            }
+
 
         }
 

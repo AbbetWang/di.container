@@ -2,10 +2,7 @@ package org.abbet.di;
 
 import jakarta.inject.Inject;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,10 +13,12 @@ import static java.util.Arrays.stream;
 class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
     private Constructor<T> injectConstructor;
     private List<Field> injectFields;
+    private List<Method> injectMethods;
 
     public ConstructorInjectionProvider(Class<T> component) {
         this.injectConstructor = getInjectConstructor(component);
         this.injectFields = getInjectFields(component);
+        this.injectMethods = getInjectMethods(component);
     }
 
 
@@ -36,6 +35,10 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
             for (Field field : injectFields) {
                 field.set(instance, context.get(field.getType()).get());
             }
+            for (Method method : injectMethods) {
+                method.invoke(instance, stream(method.getParameterTypes()).map(t -> context.get(t).get())
+                        .toArray(Object[]::new));
+            }
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
@@ -48,6 +51,12 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
                 stream(injectConstructor.getParameters())
                         .map(Parameter::getType)
                 , injectFields.stream().map(v -> v.getType())).collect(Collectors.toList());
+    }
+
+    private static <T> List<Method> getInjectMethods(Class<T> component) {
+        return stream(component.getDeclaredMethods()).
+                filter(method -> method.isAnnotationPresent(Inject.class))
+                .collect(Collectors.toList());
     }
 
     private static <T> List<Field> getInjectFields(Class<T> component) {
