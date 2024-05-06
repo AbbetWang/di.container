@@ -167,6 +167,9 @@ public class ContainerTest {
                 Dependency dependency;
             }
 
+            static class SubClassWithFieldInjection extends ComponentWithFieldInjection {
+            }
+
             // TODO inject filed
             @Test
             public void should_inject_dependency_via_field() {
@@ -179,7 +182,17 @@ public class ContainerTest {
 
             }
 
-    
+            @Test
+            public void should_inject_dependency_via_superclass_inject_field() {
+                Dependency dependency = new Dependency() {
+                };
+                config.bind(Dependency.class, dependency);
+                config.bind(SubClassWithFieldInjection.class, SubClassWithFieldInjection.class);
+                ComponentWithFieldInjection component = config.getContext().get(SubClassWithFieldInjection.class).get();
+                assertSame(dependency, component.dependency);
+            }
+
+
             @Test
             public void should_include_field_dependency_in_dependencies() {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFieldInjection.class);
