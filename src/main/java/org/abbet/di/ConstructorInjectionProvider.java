@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,9 +43,14 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
 
     @Override
     public List<Class<?>> getDependencies() {
-        return stream(injectConstructor.getParameters())
+        List<Class<?>> dependencies = new ArrayList<>();
+        List<Class<?>> injectConstructorDependencies = stream(injectConstructor.getParameters())
                 .map(Parameter::getType)
                 .collect(Collectors.toList());
+        List<? extends Class<?>> injectFieldDependencies = injectFields.stream().map(v -> v.getType()).collect(Collectors.toList());
+        dependencies.addAll(injectConstructorDependencies);
+        dependencies.addAll(injectFieldDependencies);
+        return dependencies;
     }
 
     private static <T> List<Field> getInjectFields(Class<T> component) {

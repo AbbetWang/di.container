@@ -179,7 +179,7 @@ public class ContainerTest {
 
             }
 
-
+    
             @Test
             public void should_include_field_dependency_in_dependencies() {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFieldInjection.class);
