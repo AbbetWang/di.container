@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
+import static java.util.stream.Stream.concat;
 
 class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
     private Constructor<T> injectConstructor;
@@ -49,13 +50,12 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
 
     @Override
     public List<Class<?>> getDependencies() {
-        Set<Class<?>> dependenciesViaMethod = new HashSet<>();
-        injectMethods.stream().map(Method::getParameterTypes)
-                .forEach(types -> dependenciesViaMethod.addAll(List.of(types)));
-        return Stream.concat(dependenciesViaMethod.stream(), Stream.concat(
-                stream(injectConstructor.getParameters())
-                        .map(Parameter::getType)
-                , injectFields.stream().map(v -> v.getType()))).collect(Collectors.toList());
+        return concat(concat(
+                        stream(injectConstructor.getParameters())
+                                .map(Parameter::getType)
+                        , injectFields.stream().map(v -> v.getType())),
+                injectMethods.stream().flatMap(method -> stream(method.getParameterTypes()))
+        ).collect(Collectors.toList());
     }
 
     private static <T> List<Method> getInjectMethods(Class<T> component) {
