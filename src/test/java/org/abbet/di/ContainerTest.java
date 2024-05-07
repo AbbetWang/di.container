@@ -209,7 +209,17 @@ public class ContainerTest {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFieldInjection.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
+
             // TODO throw exception if field is final
+            static class FinalInjectField {
+                @Inject
+                final Dependency dependency = null;
+            }
+
+            @Test
+            public void should_throw_exception_if_inject_field_is_final() {
+                assertThrows(IllegalComponentException.class, () -> new ConstructorInjectionProvider<>(FinalInjectField.class));
+            }
         }
 
         @Nested
