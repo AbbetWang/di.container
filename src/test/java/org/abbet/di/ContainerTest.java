@@ -210,7 +210,6 @@ public class ContainerTest {
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
 
-            // TODO throw exception if field is final
             static class FinalInjectField {
                 @Inject
                 final Dependency dependency = null;
