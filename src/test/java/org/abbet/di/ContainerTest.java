@@ -57,7 +57,13 @@ public class ContainerTest {
                 });
             }
 
-            // TODO: interface
+            @Test
+            public void should_throw_exception_if_component_is_interface() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(Component.class);
+                });
+            }
+
             @Test
             public void should_bind_type_to_a_class_with_default_constructor() {
                 config.bind(Component.class, ComponentWithDefaultConstructor.class);
