@@ -229,7 +229,6 @@ public class ContainerTest {
 
             }
 
-            // TODO: inject method with dependencies will be injected
             @Test
             public void should_inject_dependency_via_inject_method() {
                 config.bind(InjectMethodWithDependency.class, InjectMethodWithDependency.class);
@@ -241,11 +240,41 @@ public class ContainerTest {
                 assertSame(dependency, component.dependency);
             }
 
+            //TODO override inject method from superclass
+            static class SuperClassWithInjectMethod {
+                boolean superCalled = false;
+
+                @Inject
+                void install() {
+                    superCalled = true;
+                }
+            }
+
+            static class SubclassWithInjectMethod extends SuperClassWithInjectMethod {
+                boolean subCalled = false;
+
+                @Inject
+                void installAnother() {
+                    subCalled = true;
+                }
+            }
+
+            @Test
+            public void should_inject_dependency_via_inject_method_from_superclass() {
+                config.bind(SubclassWithInjectMethod.class, SubclassWithInjectMethod.class);
+                SubclassWithInjectMethod component = config.getContext().get(SubclassWithInjectMethod.class).get();
+                assertTrue(component.superCalled);
+
+            }
+
+
             @Test
             public void should_include_dependencies_from_inject_method() {
                 ConstructorInjectionProvider<InjectMethodWithDependency> provider = new ConstructorInjectionProvider<>(InjectMethodWithDependency.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
+
+            //TODO throw exception if type parameter defined
 
 
         }
