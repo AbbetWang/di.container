@@ -2,10 +2,8 @@ package org.abbet.di;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.Optional;
@@ -268,7 +266,7 @@ public class ContainerTest {
 
             }
 
-            static class SubclassOverrideSuperCallWithInject extends SuperClassWithInjectMethod {
+            static class SubclassOverrideSuperClassWithInject extends SuperClassWithInjectMethod {
                 @Inject
                 void install() {
                     super.install();
@@ -277,9 +275,21 @@ public class ContainerTest {
 
             @Test
             public void should_call_only_once_if_subclass_override_superclass_inject_method_with_inject() {
-                config.bind(SubclassOverrideSuperCallWithInject.class, SubclassOverrideSuperCallWithInject.class);
-                SubclassOverrideSuperCallWithInject component = config.getContext().get(SubclassOverrideSuperCallWithInject.class).get();
+                config.bind(SubclassOverrideSuperClassWithInject.class, SubclassOverrideSuperClassWithInject.class);
+                SubclassOverrideSuperClassWithInject component = config.getContext().get(SubclassOverrideSuperClassWithInject.class).get();
                 assertEquals(1, component.superCalled);
+            }
+
+            static class SubclassOverrideSuperClassWithoutInject extends SuperClassWithInjectMethod {
+                void install() {
+                }
+            }
+
+            @Test
+            public void should_not_call__if_subclass_override_superclass_inject_method_without_inject() {
+                config.bind(SubclassOverrideSuperClassWithoutInject.class, SubclassOverrideSuperClassWithoutInject.class);
+                SubclassOverrideSuperClassWithoutInject component = config.getContext().get(SubclassOverrideSuperClassWithoutInject.class).get();
+                assertEquals(0, component.superCalled);
             }
 
 
