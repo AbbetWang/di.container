@@ -3,10 +3,7 @@ package org.abbet.di;
 import jakarta.inject.Inject;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +64,7 @@ class ConstructorInjectionProvider<T> implements ContextConfig.ComponentProvider
                     .collect(Collectors.toList()));
             current = current.getSuperclass();
         }
+        Collections.reverse(injectMethods);
         return injectMethods;
     }
 
