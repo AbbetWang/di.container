@@ -282,6 +282,7 @@ public class ContainerTest {
 
             static class SubclassOverrideSuperClassWithoutInject extends SuperClassWithInjectMethod {
                 void install() {
+                    super.install();
                 }
             }
 
