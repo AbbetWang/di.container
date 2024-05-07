@@ -268,6 +268,20 @@ public class ContainerTest {
 
             }
 
+            static class SubclassOverrideSuperCallWithInject extends SuperClassWithInjectMethod {
+                @Inject
+                void install() {
+                    super.install();
+                }
+            }
+
+            @Test
+            public void should_call_only_once_if_subclass_override_superclass_inject_method_with_inject() {
+                config.bind(SubclassOverrideSuperCallWithInject.class, SubclassOverrideSuperCallWithInject.class);
+                SubclassOverrideSuperCallWithInject component = config.getContext().get(SubclassOverrideSuperCallWithInject.class).get();
+                assertEquals(1, component.superCalled);
+            }
+
 
             @Test
             public void should_include_dependencies_from_inject_method() {
