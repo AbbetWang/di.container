@@ -156,7 +156,12 @@ public class ContainerTest {
                 assertThrows(IllegalComponentException.class, () -> {
                     new ConstructorInjectionProvider<>(ComponentWithoutInjectOrDefaultConstructor.class);
                 });
+            }
 
+            @Test
+            public void should_include_dependency_from_inject_constructor() {
+                ConstructorInjectionProvider<ComponentWithInjectConstructor> provider = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class);
+                assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
 
         }
