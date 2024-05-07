@@ -42,6 +42,50 @@ public class ContainerTest {
         }
 
         @Nested
+        public class DependencyCheck {
+            @Test
+            public void should_throw_exception_if_dependencies_not_found() {
+                config.bind(Component.class, ComponentWithInjectConstructor.class);
+                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
+                    config.getContext();
+                });
+                assertEquals(Dependency.class, exception.getDependency());
+                assertEquals(Component.class, exception.getComponent());
+
+            }
+
+            @Test
+            public void should_throw_exception_if_cyclic_dependencies_found() {
+                config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
+                config.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
+                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
+                    config.getContext();
+                });
+
+                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
+                assertEquals(2, classes.size());
+                assertTrue(classes.contains(Component.class));
+                assertTrue(classes.contains(Dependency.class));
+
+            }
+
+            @Test
+            public void should_throw_exception_if_transitive_cyclic_dependencies_found() {
+                config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
+                config.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
+                config.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
+                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
+                    config.getContext();
+                });
+                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
+                assertEquals(3, classes.size());
+                assertTrue(classes.contains(Component.class));
+                assertTrue(classes.contains(Dependency.class));
+                assertTrue(classes.contains(AnotherDependency.class));
+            }
+        }
+
+        @Nested
         public class ConstructorInjection {
             abstract class AbstractComponent implements Component {
                 @Inject
@@ -50,19 +94,6 @@ public class ContainerTest {
                 }
             }
 
-            @Test
-            public void should_throw_exception_if_component_is_abstract() {
-                assertThrows(IllegalComponentException.class, () -> {
-                    new ConstructorInjectionProvider<>(AbstractComponent.class);
-                });
-            }
-
-            @Test
-            public void should_throw_exception_if_component_is_interface() {
-                assertThrows(IllegalComponentException.class, () -> {
-                    new ConstructorInjectionProvider<>(Component.class);
-                });
-            }
 
             @Test
             public void should_bind_type_to_a_class_with_default_constructor() {
@@ -98,11 +129,23 @@ public class ContainerTest {
             }
 
             @Test
+            public void should_throw_exception_if_component_is_abstract() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(AbstractComponent.class);
+                });
+            }
+
+            @Test
+            public void should_throw_exception_if_component_is_interface() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(Component.class);
+                });
+            }
+
+            @Test
             public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
                 assertThrows(IllegalComponentException.class, () -> {
-                    config.bind(Component.class, ComponentWithMultipleInjectConstructor.class);
-                    config.bind(String.class, "dependency");
-                    config.getContext().get(Component.class).get();
+                    new ConstructorInjectionProvider<>(ComponentWithMultipleInjectConstructor.class);
                 });
 
             }
@@ -111,63 +154,10 @@ public class ContainerTest {
             @Test
             public void should_throw_exception_when_no_default_or_inject_constructor() {
                 assertThrows(IllegalComponentException.class, () -> {
-                    config.bind(Component.class, ComponentWithoutInjectOrDefaultConstructor.class);
+                    new ConstructorInjectionProvider<>(ComponentWithoutInjectOrDefaultConstructor.class);
                 });
 
             }
-
-            @Test
-            public void should_throw_exception_if_dependencies_not_found() {
-                config.bind(Component.class, ComponentWithInjectConstructor.class);
-                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
-                    config.getContext();
-                });
-                assertEquals(Dependency.class, exception.getDependency());
-                assertEquals(Component.class, exception.getComponent());
-
-            }
-
-            @Test
-            public void should_throw_exception_if_transitive_dependency_not_found() {
-                config.bind(Component.class, ComponentWithInjectConstructor.class);
-                config.bind(Dependency.class, DependencyWithInjectConstructor.class);
-                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
-                    config.getContext();
-                });
-                assertEquals(String.class, exception.getDependency());
-                assertEquals(Dependency.class, exception.getComponent());
-            }
-
-            @Test
-            public void should_throw_exception_if_cyclic_dependencies_found() {
-                config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
-                config.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
-                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.getContext();
-                });
-
-                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
-                assertEquals(2, classes.size());
-                assertTrue(classes.contains(Component.class));
-                assertTrue(classes.contains(Dependency.class));
-
-            }
-
-            @Test
-            public void should_throw_exception_if_transitive_cyclic_dependencies_found() {
-                config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
-                config.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
-                config.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
-                CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
-                    config.getContext();
-                });
-                Set<Class<?>> classes = Sets.newSet(exception.getComponents());
-                assertEquals(3, classes.size());
-                assertTrue(classes.contains(Component.class));
-                assertTrue(classes.contains(Dependency.class));
-                assertTrue(classes.contains(AnotherDependency.class));
-            }
-
 
         }
 
@@ -321,7 +311,6 @@ public class ContainerTest {
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
             }
 
-            //TODO throw exception if type parameter defined
             static class InjectMethodWithTypeParameter {
                 @Inject
                 <T> void install() {
