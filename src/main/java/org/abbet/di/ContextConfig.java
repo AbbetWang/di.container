@@ -30,7 +30,6 @@ public class ContextConfig {
 
     public Context getContext() {
         providers.keySet().forEach(component -> checkDependency(component, new Stack<>()));
-
         return new Context() {
             @Override
             public <Type> Optional<Type> get(Class<Type> type) {
