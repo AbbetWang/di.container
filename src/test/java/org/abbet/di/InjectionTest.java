@@ -10,16 +10,18 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Nested
 public class InjectionTest {
-    private Dependency dependency = Mockito.mock(Dependency.class);
+    private Dependency dependency = mock(Dependency.class);
 
-    private Context context = Mockito.mock(Context.class);
+    private Context context = mock(Context.class);
 
     @BeforeEach
     public void beforeEach() {
-        Mockito.when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
+        when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
     }
 
     @Nested
@@ -50,7 +52,7 @@ public class InjectionTest {
 
         @Test
         public void should_bind_type_to_a_class_with_transitive_dependencies() {
-            Mockito.when(context.get(eq(Dependency.class))).thenReturn(Optional.of(
+            when(context.get(eq(Dependency.class))).thenReturn(Optional.of(
                     new DependencyWithInjectConstructor("indirect dependency")
             ));
 
