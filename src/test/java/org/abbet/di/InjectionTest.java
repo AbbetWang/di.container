@@ -37,9 +37,8 @@ public class InjectionTest {
         @Test
         public void should_bind_type_to_a_class_with_default_constructor() {
 
-            Component instance = new ConstructorInjectionProvider<>(ComponentWithDefaultConstructor.class).get(context);
+            ComponentWithDefaultConstructor instance = new ConstructorInjectionProvider<>(ComponentWithDefaultConstructor.class).get(context);
             assertNotNull(instance);
-            assertTrue(instance instanceof ComponentWithDefaultConstructor);
         }
 
         @Test
