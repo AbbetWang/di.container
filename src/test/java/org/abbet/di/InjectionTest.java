@@ -56,40 +56,42 @@ public class InjectionTest {
             }
         }
 
+        @Nested
+        class IllegalInjectConstructors {
+            @Test
+            public void should_throw_exception_if_component_is_abstract() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(ConstructorInjection.AbstractComponent.class);
+                });
+            }
+
+            @Test
+            public void should_throw_exception_if_component_is_interface() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(Component.class);
+                });
+            }
+
+            @Test
+            public void should_throw_exception_if_more_than_one_inject_constructor_provided() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(ComponentWithMultipleInjectConstructor.class);
+                });
+
+            }
+
+            @Test
+            public void should_throw_exception_if_no_default_or_inject_constructor() {
+                assertThrows(IllegalComponentException.class, () -> {
+                    new ConstructorInjectionProvider<>(ComponentWithoutInjectOrDefaultConstructor.class);
+                });
+            }
+        }
+
         static class DefaultConstructor {
 
         }
 
-
-        @Test
-        public void should_throw_exception_if_component_is_abstract() {
-            assertThrows(IllegalComponentException.class, () -> {
-                new ConstructorInjectionProvider<>(ConstructorInjection.AbstractComponent.class);
-            });
-        }
-
-        @Test
-        public void should_throw_exception_if_component_is_interface() {
-            assertThrows(IllegalComponentException.class, () -> {
-                new ConstructorInjectionProvider<>(Component.class);
-            });
-        }
-
-        @Test
-        public void should_throw_exception_when_more_than_one_inject_constructor_provided() {
-            assertThrows(IllegalComponentException.class, () -> {
-                new ConstructorInjectionProvider<>(ComponentWithMultipleInjectConstructor.class);
-            });
-
-        }
-
-
-        @Test
-        public void should_throw_exception_when_no_default_or_inject_constructor() {
-            assertThrows(IllegalComponentException.class, () -> {
-                new ConstructorInjectionProvider<>(ComponentWithoutInjectOrDefaultConstructor.class);
-            });
-        }
     }
 
     @Nested
