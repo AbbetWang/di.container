@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Optional;
 
@@ -35,20 +34,20 @@ public class InjectionTest {
 
 
         @Test
-        public void should_bind_type_to_a_class_with_default_constructor() {
+        public void should_call_default_constructor_if_no_inject_constructor() {
 
             ComponentWithDefaultConstructor instance = new ConstructorInjectionProvider<>(ComponentWithDefaultConstructor.class).get(context);
             assertNotNull(instance);
         }
 
         @Test
-        public void should_bind_type_to_a_class_with_inject_constructor() {
+        public void should_inject_dependency_via_inject_constructor() {
 
             ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
             assertNotNull(instance);
             assertSame(dependency, instance.getDependency());
         }
-        
+
         @Test
         public void should_throw_exception_if_component_is_abstract() {
             assertThrows(IllegalComponentException.class, () -> {
