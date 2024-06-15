@@ -34,28 +34,32 @@ public class InjectionTest {
 
         @Nested
         class Injection {
+            @Test
+            public void should_call_default_constructor_if_no_inject_constructor() {
 
+                DefaultConstructor instance = new ConstructorInjectionProvider<>(DefaultConstructor.class).get(context);
+                assertNotNull(instance);
+            }
+
+            @Test
+            public void should_inject_dependency_via_inject_constructor() {
+
+                ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
+                assertNotNull(instance);
+                assertSame(dependency, instance.getDependency());
+            }
+
+            @Test
+            public void should_include_dependency_from_inject_constructor() {
+                ConstructorInjectionProvider<ComponentWithInjectConstructor> provider = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class);
+                assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
+            }
         }
 
         static class DefaultConstructor {
 
         }
 
-
-        @Test
-        public void should_call_default_constructor_if_no_inject_constructor() {
-
-            DefaultConstructor instance = new ConstructorInjectionProvider<>(DefaultConstructor.class).get(context);
-            assertNotNull(instance);
-        }
-
-        @Test
-        public void should_inject_dependency_via_inject_constructor() {
-
-            ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
-            assertNotNull(instance);
-            assertSame(dependency, instance.getDependency());
-        }
 
         @Test
         public void should_throw_exception_if_component_is_abstract() {
@@ -86,13 +90,6 @@ public class InjectionTest {
                 new ConstructorInjectionProvider<>(ComponentWithoutInjectOrDefaultConstructor.class);
             });
         }
-
-        @Test
-        public void should_include_dependency_from_inject_constructor() {
-            ConstructorInjectionProvider<ComponentWithInjectConstructor> provider = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class);
-            assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
-        }
-
     }
 
     @Nested
