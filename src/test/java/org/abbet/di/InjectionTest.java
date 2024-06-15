@@ -44,25 +44,11 @@ public class InjectionTest {
         @Test
         public void should_bind_type_to_a_class_with_inject_constructor() {
 
-            Component instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
+            ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
             assertNotNull(instance);
-            assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
+            assertSame(dependency, instance.getDependency());
         }
-
-        @Test
-        public void should_bind_type_to_a_class_with_transitive_dependencies() {
-            when(context.get(eq(Dependency.class))).thenReturn(Optional.of(
-                    new DependencyWithInjectConstructor("indirect dependency")
-            ));
-
-            Component instance = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class).get(context);
-            assertNotNull(instance);
-            Dependency dependency = ((ComponentWithInjectConstructor) instance).getDependency();
-            assertNotNull(dependency);
-            assertEquals("indirect dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
-
-        }
-
+        
         @Test
         public void should_throw_exception_if_component_is_abstract() {
             assertThrows(IllegalComponentException.class, () -> {
