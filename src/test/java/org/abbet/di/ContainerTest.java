@@ -10,6 +10,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.internal.util.collections.Sets;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -143,10 +145,11 @@ public class ContainerTest {
             }
         }
 
-        @Test
-        public void should_throw_exception_if_cyclic_dependencies_found() {
-            config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
-            config.bind(Dependency.class, DependencyCyclicComponentConstructor.class);
+        @ParameterizedTest(name = "cyclic dependency between {0} and {1}")
+        @MethodSource
+        public void should_throw_exception_if_cyclic_dependencies_found(Class<? extends Component> component, Class<? extends Dependency> dependency) {
+            config.bind(Component.class, component);
+            config.bind(Dependency.class, dependency);
             CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
                 config.getContext();
             });
@@ -156,6 +159,69 @@ public class ContainerTest {
             assertTrue(classes.contains(Component.class));
             assertTrue(classes.contains(Dependency.class));
 
+        }
+
+        static Stream<Arguments> should_throw_exception_if_cyclic_dependencies_found() {
+            List<Arguments> arguments = new ArrayList<>();
+            for (Named component : List.of(Named.of("Inject Constructor", CyclicComponentInjectConstructor.class),
+                    Named.of("Inject Field", CyclicComponentInjectField.class),
+                    Named.of("Inject Method", CyclicComponentInjectMethod.class)
+            ))
+                for (Named dependency : List.of(Named.of("Inject Constructor", CyclicDependencyInjectConstructor.class),
+                        Named.of("Inject Field", CyclicDependencyInjectField.class),
+                        Named.of("Inject Method", CyclicDependencyInjectMethod.class)
+                ))
+                    arguments.add(Arguments.of(component, dependency));
+            return arguments.stream();
+        }
+
+        static class CyclicComponentInjectConstructor implements Component {
+            private Dependency dependency;
+
+            @Inject
+            public CyclicComponentInjectConstructor(Dependency dependency) {
+                this.dependency = dependency;
+            }
+        }
+
+        static class CyclicDependencyInjectConstructor implements Dependency {
+            private Component component;
+
+            @Inject
+            public CyclicDependencyInjectConstructor(Component component) {
+                this.component = component;
+            }
+        }
+
+        static class CyclicComponentInjectField implements Component {
+
+            @Inject
+            Dependency dependency;
+        }
+
+        static class CyclicDependencyInjectField implements Dependency {
+
+            @Inject
+            Component component;
+        }
+
+        static class CyclicComponentInjectMethod implements Component {
+
+            private Dependency dependency;
+
+            @Inject
+            public void install(Dependency dependency) {
+                this.dependency = dependency;
+            }
+        }
+
+        static class CyclicDependencyInjectMethod implements Dependency {
+            private Component component;
+
+            @Inject
+            void install(Component component) {
+                this.component = component;
+            }
         }
 
         @Test
@@ -204,48 +270,6 @@ interface AnotherDependency {
 
 }
 
-class ComponentWithInjectConstructor implements Component {
-    private Dependency dependency;
-
-    @Inject
-    public ComponentWithInjectConstructor(Dependency dependency) {
-        this.dependency = dependency;
-    }
-
-    @Override
-    public Dependency dependency() {
-        return dependency;
-    }
-}
-
-class ComponentWithMultipleInjectConstructor implements Component {
-
-    String dependency;
-
-    @Inject
-    public ComponentWithMultipleInjectConstructor() {
-    }
-
-    @Inject
-    public ComponentWithMultipleInjectConstructor(String dependency) {
-        this.dependency = dependency;
-    }
-}
-
-class ComponentWithoutInjectOrDefaultConstructor implements Component {
-
-    public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
-    }
-}
-
-class DependencyCyclicComponentConstructor implements Dependency {
-    private Component component;
-
-    @Inject
-    public DependencyCyclicComponentConstructor(Component component) {
-        this.component = component;
-    }
-}
 
 class ComponentCyclicDependencyConstructor implements Component {
     private Dependency dependency;

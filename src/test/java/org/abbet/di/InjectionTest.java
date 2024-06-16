@@ -92,6 +92,26 @@ public class InjectionTest {
 
         }
 
+        static class ComponentWithMultipleInjectConstructor implements Component {
+
+            String dependency;
+
+            @Inject
+            public ComponentWithMultipleInjectConstructor() {
+            }
+
+            @Inject
+            public ComponentWithMultipleInjectConstructor(String dependency) {
+                this.dependency = dependency;
+            }
+        }
+
+        static class ComponentWithoutInjectOrDefaultConstructor implements Component {
+
+            public ComponentWithoutInjectOrDefaultConstructor(String whatever) {
+            }
+        }
+
     }
 
     @Nested
@@ -268,4 +288,17 @@ public class InjectionTest {
 
     }
 
+    static class ComponentWithInjectConstructor implements Component {
+        private Dependency dependency;
+
+        @Inject
+        public ComponentWithInjectConstructor(Dependency dependency) {
+            this.dependency = dependency;
+        }
+
+        @Override
+        public Dependency dependency() {
+            return dependency;
+        }
+    }
 }
