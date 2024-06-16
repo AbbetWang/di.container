@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,7 +43,6 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
         }
     }
 
-
     @Override
     public List<Class<?>> getDependencies() {
         return concat(concat(
@@ -54,37 +54,15 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
     }
 
     private static <T> List<Method> getInjectMethods(Class<T> component) {
-        List<Method> injectMethods = new ArrayList<>();
-        Class<?> current = component;
-        while (current != Object.class) {
-            injectMethods.addAll(injectable(current.getDeclaredMethods())
-                    .filter(m -> isOverrideByInjectMethod(injectMethods, m))
-                    .filter(m -> isOverrideByNonInjectMethod(component, m))
-                    .toList());
-            current = current.getSuperclass();
-        }
+        List<Method> injectMethods = traverse(component, (methods, current) -> injectable(current.getDeclaredMethods())
+                .filter(m -> isOverrideByInjectMethod(methods, m))
+                .filter(m -> isOverrideByNonInjectMethod(component, m)).toList());
         Collections.reverse(injectMethods);
         return injectMethods;
     }
 
-    private static <T> boolean isOverrideByNonInjectMethod(Class<T> component, Method m) {
-        return stream(component.getDeclaredMethods()).filter(m1 -> !m1.isAnnotationPresent(Inject.class)).noneMatch(o -> isOverride(m, o));
-    }
-
-    private static boolean isOverrideByInjectMethod(List<Method> injectMethods, Method m) {
-        return injectMethods.stream().noneMatch(o -> isOverride(m, o));
-    }
-
-
     private static <T> List<Field> getInjectFields(Class<T> component) {
-        List<Field> injectFields = new ArrayList<>();
-        Class<?> current = component;
-        while (current != Object.class) {
-            injectFields.addAll(injectable(current.getDeclaredFields()).
-                    toList());
-            current = current.getSuperclass();
-        }
-        return injectFields;
+        return traverse(component, (fields, current) -> injectable(current.getDeclaredFields()).toList());
     }
 
 
@@ -111,11 +89,29 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
         return o.getName().equals(m.getName()) && Arrays.equals(o.getParameters(), m.getParameters());
     }
 
+    private static <T> boolean isOverrideByNonInjectMethod(Class<T> component, Method m) {
+        return stream(component.getDeclaredMethods()).filter(m1 -> !m1.isAnnotationPresent(Inject.class)).noneMatch(o -> isOverride(m, o));
+    }
+
+    private static boolean isOverrideByInjectMethod(List<Method> injectMethods, Method m) {
+        return injectMethods.stream().noneMatch(o -> isOverride(m, o));
+    }
+
     private static Object[] toDependencies(Context context, Executable executable) {
         return stream(executable.getParameterTypes()).map(t -> context.get(t).get()).toArray(Object[]::new);
     }
 
     private static Object toDependency(Context context, Field field) {
         return context.get(field.getType()).get();
+    }
+
+    private static <T> List<T> traverse(Class<?> component, BiFunction<List<T>, Class<?>, List<T>> finder) {
+        List<T> members = new ArrayList<>();
+        Class<?> current = component;
+        while (current != Object.class) {
+            members.addAll(finder.apply(members, current));
+            current = current.getSuperclass();
+        }
+        return members;
     }
 }
