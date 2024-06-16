@@ -110,7 +110,7 @@ public class ContainerTest {
         @ParameterizedTest
         @MethodSource
         public void should_throw_exception_if_dependencies_not_found(Class<? extends Component> component) {
-            config.bind(Component.class, ComponentWithInjectConstructor.class);
+            config.bind(Component.class, component);
             DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
                 config.getContext();
             });
