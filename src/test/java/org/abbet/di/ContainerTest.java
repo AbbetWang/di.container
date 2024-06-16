@@ -224,11 +224,12 @@ public class ContainerTest {
             }
         }
 
-        @Test
-        public void should_throw_exception_if_transitive_cyclic_dependencies_found() {
-            config.bind(Component.class, ComponentCyclicDependencyConstructor.class);
-            config.bind(Dependency.class, DependencyDependedOnAnotherDependency.class);
-            config.bind(AnotherDependency.class, AnotherDependencyDependComponent.class);
+        @ParameterizedTest(name = "cyclic dependency between {0} , {1} and {2}")
+        @MethodSource
+        public void should_throw_exception_if_transitive_cyclic_dependencies_found(Class<? extends Component> component, Class<? extends Dependency> dependency, Class<? extends AnotherDependency> anotherDependency) {
+            config.bind(Component.class, component);
+            config.bind(Dependency.class, dependency);
+            config.bind(AnotherDependency.class, anotherDependency);
             CyclicDependencyFoundException exception = assertThrows(CyclicDependencyFoundException.class, () -> {
                 config.getContext();
             });
@@ -237,6 +238,76 @@ public class ContainerTest {
             assertTrue(classes.contains(Component.class));
             assertTrue(classes.contains(Dependency.class));
             assertTrue(classes.contains(AnotherDependency.class));
+        }
+
+        static Stream<Arguments> should_throw_exception_if_transitive_cyclic_dependencies_found() {
+            List<Arguments> arguments = new ArrayList<>();
+            List<Named<? extends Class<? extends Component>>> components = List.of(Named.of("Inject Constructor", CyclicComponentInjectConstructor.class),
+                    Named.of("Inject Field", CyclicComponentInjectField.class),
+                    Named.of("Inject Method", CyclicComponentInjectMethod.class)
+            );
+            List<Named<? extends Class<? extends Dependency>>> dependencies = List.of(Named.of("Inject Constructor", IndirectCyclicDependencyInjectConstructor.class),
+                    Named.of("Inject Field", IndirectCyclicDependencyInjectField.class),
+                    Named.of("Inject Method", IndirectCyclicDependencyInjectMethod.class)
+            );
+            List<Named<? extends Class<? extends AnotherDependency>>> anotherDependencies = List.of(Named.of("Inject Constructor", IndirectCyclicAnotherDependencyInjectConstructor.class),
+                    Named.of("Inject Field", IndirectCyclicAnotherDependencyInjectField.class),
+                    Named.of("Inject Method", IndirectCyclicAnotherDependencyInjectMethod.class)
+            );
+            for (Named component : components)
+                for (Named dependency : dependencies)
+                    for (Named anotherDependency : anotherDependencies)
+                        arguments.add(Arguments.of(component, dependency, anotherDependency));
+            return arguments.stream();
+        }
+
+        static class IndirectCyclicDependencyInjectConstructor implements Dependency {
+            private AnotherDependency anotherDependency;
+
+            @Inject
+            public IndirectCyclicDependencyInjectConstructor(AnotherDependency anotherDependency) {
+                this.anotherDependency = anotherDependency;
+            }
+        }
+
+        static class IndirectCyclicAnotherDependencyInjectConstructor implements AnotherDependency {
+            private Component component;
+
+            @Inject
+            public IndirectCyclicAnotherDependencyInjectConstructor(Component component) {
+                this.component = component;
+            }
+        }
+
+        static class IndirectCyclicDependencyInjectField implements Dependency {
+
+            @Inject
+            AnotherDependency anotherDependency;
+        }
+
+        static class IndirectCyclicAnotherDependencyInjectField implements AnotherDependency {
+
+            @Inject
+            Component component;
+
+        }
+
+        static class IndirectCyclicDependencyInjectMethod implements Dependency {
+            private AnotherDependency anotherDependency;
+
+            @Inject
+            public void install(AnotherDependency anotherDependency) {
+                this.anotherDependency = anotherDependency;
+            }
+        }
+
+        static class IndirectCyclicAnotherDependencyInjectMethod implements AnotherDependency {
+            private Component component;
+
+            @Inject
+            public void install(Component component) {
+                this.component = component;
+            }
         }
     }
 
