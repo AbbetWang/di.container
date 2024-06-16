@@ -106,8 +106,10 @@ public class ContainerTest {
 
     @Nested
     public class DependencyCheck {
-        @Test
-        public void should_throw_exception_if_dependencies_not_found() {
+
+        @ParameterizedTest
+        @MethodSource
+        public void should_throw_exception_if_dependencies_not_found(Class<? extends Component> component) {
             config.bind(Component.class, ComponentWithInjectConstructor.class);
             DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> {
                 config.getContext();
@@ -115,6 +117,30 @@ public class ContainerTest {
             assertEquals(Dependency.class, exception.getDependency());
             assertEquals(Component.class, exception.getComponent());
 
+        }
+
+        public static Stream<Arguments> should_throw_exception_if_dependencies_not_found() {
+            return Stream.of(Arguments.of(Named.of("Inject Constructor", DependencyCheck.MissingDependencyConstructor.class)),
+                    Arguments.of(Named.of("Inject Field", DependencyCheck.MissingDependencyField.class)),
+                    Arguments.of(Named.of("Inject Method", DependencyCheck.MissingDependencyMethod.class))
+            );
+        }
+
+        static class MissingDependencyConstructor implements Component {
+            @Inject
+            public MissingDependencyConstructor(Dependency dependency) {
+            }
+        }
+
+        static class MissingDependencyField implements Component {
+            @Inject
+            Dependency dependency;
+        }
+
+        static class MissingDependencyMethod implements Component {
+            @Inject
+            public void install(Dependency dependency) {
+            }
         }
 
         @Test
